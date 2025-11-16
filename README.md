@@ -1,38 +1,19 @@
-```{=html}
-<p align="center">
-```
-`<a href="https://laravel.com" target="_blank">`{=html}
-`<img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">`{=html}
-`</a>`{=html}
-```{=html}
-</p>
-```
-```{=html}
-<p align="center">
-```
-`<a href="https://github.com/AnthonnyM31/Proyecto_NexusV-V2">`{=html}
-`<img src="https://img.shields.io/badge/Status-Complete-green" alt="Status">`{=html}
-`</a>`{=html}
-`<a href="https://packagist.org/packages/laravel/framework">`{=html}
-`<img src="https://img.shields.io/badge/Framework-Laravel%2011%2B-red" alt="Laravel Version">`{=html}
-`</a>`{=html}
-`<a href="https://github.com/AnthonnyM31/Proyecto_NexusV-V2/blob/main/LICENSE">`{=html}
-`<img src="https://img.shields.io/packagist/l/laravel/framework" alt="License">`{=html}
-`</a>`{=html}
-```{=html}
-</p>
-```
 
-------------------------------------------------------------------------
+# 🚀 Proyecto NexusV‑V2
 
-# 🚀 Proyecto NexusV-V2: Plataforma de Cursos con Control Total
+### Plataforma de Cursos con Control Jerárquico Avanzado
 
-**Implementación de Roles Jerárquicos y Gestión Global**
+**NexusV‑V2** es una plataforma web desarrollada en **Laravel 11+** que
+simula un sistema completo de **gestión y venta de cursos en tiempo
+real**.\
+El proyecto se centra fuertemente en la **administración de roles**, el
+**control de permisos** y la gestión integral de usuarios, cursos e
+inscripciones.
 
-**NexusV-V2** es una plataforma de ingeniería web desarrollada en
-**Laravel** que simula un sistema de **venta y gestión de cursos en
-tiempo real**. Su arquitectura se basa en roles diferenciados:
-**Administrador Maestro/Secundario, Vendedor** y **Comprador**.
+Su estructura se basa en cuatro perfiles principales:\
+**Administrador Maestro**, **Administrador Secundario**, **Vendedor** y
+**Comprador**, cada uno con capacidades cuidadosamente aisladas mediante
+**Gates**, **Policies** y verificaciones adicionales.
 
 ------------------------------------------------------------------------
 
@@ -48,64 +29,82 @@ tiempo real**. Su arquitectura se basa en roles diferenciados:
 
 ## 🔑 Roles y Jerarquía
 
-El proyecto implementa un sistema de control de acceso avanzado mediante
-Gates de Laravel:
+La plataforma implementa un sistema jerárquico pensado para operaciones
+reales de manejo de personal y control administrativo.
 
-  -----------------------------------------------------------------------
-  Rol                     Función                 Nivel de Acceso
-  ----------------------- ----------------------- -----------------------
-  **Administrador         **Control Total.**      **Máximo** (Inmune a
-  Maestro**               Puede crear otros       Admins Secundarios)
-                          Admins, ver/modificar   
-                          *todos* los datos, y    
-                          eliminar *cualquier*    
-                          recurso/usuario.        
+### 🏆 **Administrador Maestro (Super Admin)**
 
-  **Administrador         Gestión diaria de       **Alto** (Bloqueado
-  Secundario**            usuarios, cursos e      para modificar al Admin
-                          inscripciones.          Maestro)
+-   Acceso total a todo el sistema.\
+-   Puede crear/eliminar a cualquier usuario, incluyendo Admins
+    Secundarios.\
+-   Inmune a restricciones de edición y propiedad en cursos y recursos.\
+-   Puede ver, modificar y eliminar **cualquier** registro sin
+    limitación.
 
-  **Vendedor**            Crea y publica cursos.  **Limitado**
+### 🛡️ **Administrador Secundario**
 
-  **Comprador**           Se inscribe y visualiza **Limitado**
-                          cursos.                 
-  -----------------------------------------------------------------------
+-   Maneja tareas operativas: usuarios, cursos e inscripciones.\
+-   **No puede modificar ni eliminar** al Administrador Maestro.\
+-   Puede editar cursos de vendedores, pero siempre bajo restricciones
+    de seguridad.
+
+### 🛒 **Vendedor**
+
+-   Puede crear, gestionar y publicar cursos propios.\
+-   No puede editar cursos de otros vendedores.\
+-   Interfaz reducida enfocada únicamente en su catálogo.
+
+### 🎓 **Comprador**
+
+-   Puede explorar el catálogo.\
+-   Puede inscribirse en cursos y visualizarlos en su dashboard
+    personal.\
+-   Acceso limitado únicamente a experiencias de aprendizaje.
 
 ------------------------------------------------------------------------
 
 ## 💡 Lecciones Aprendidas
 
-Durante el desarrollo se presentaron desafíos críticos relacionados con
-la estabilidad del entorno y la inestabilidad de las clases de Breeze,
-solucionados de la siguiente manera:
+Durante el desarrollo del proyecto se encontraron problemas técnicos
+complejos que ayudaron a fortalecer la estabilidad del sistema:
 
--   **Errores Cíclicos y Clases Faltantes:** Controladores esenciales de
-    Breeze (`AuthenticatedSessionController`, `ProfileController`) no se
-    generaron correctamente, lo cual se resolvió con la creación manual
-    de archivos y limpieza profunda.
--   **Error Crítico `403`:** El Administrador Maestro era bloqueado al
-    editar cursos de un vendedor porque el `Seller/CourseController` no
-    tenía una **excepción** en la lógica de propiedad
-    (`$course->user_id === Auth::id()`). Se solucionó añadiendo la
-    verificación `Auth::user()->isMasterAdmin()` para anular la
-    restricción.
--   **Corrupción de Base de Datos:** La tabla **`enrollments`** se
-    generó sin las llaves foráneas (`course_id`), requiriendo el uso de
-    `php artisan migrate:fresh` para restaurar la integridad del
-    esquema.
--   **Inestabilidad de Rutas:** Se tuvo que **eliminar el uso de aliases
-    de rutas** (`route('seller.courses.index')`) en las vistas para usar
-    la URL directa (`/seller/courses`) para mejorar la estabilidad en el
-    entorno Windows.
+### 🔧 Problemas y Soluciones
+
+-   **Clases críticas de Breeze no generadas**\
+    Breeze omitió archivos esenciales como
+    `AuthenticatedSessionController`.\
+    → *Solución:* creación manual, revisión de namespaces y limpieza del
+    entorno.
+
+-   **Error 403 para el Admin Maestro al editar cursos ajenos**\
+    La verificación `$course->user_id === Auth::id()` bloqueaba al Admin
+    Maestro.\
+    → *Solución:* excepción explícita mediante
+    `if (Auth::user()->isMasterAdmin())`.
+
+-   **Esquema de base de datos corrupto**\
+    La tabla `enrollments` se generó sin `course_id`.\
+    → *Solución:* `php artisan migrate:fresh` y verificación del esquema
+    completo.
+
+-   **Problemas con alias de rutas en Windows**\
+    Vistas que dependían de `route('seller.courses.index')` fallaban.\
+    → *Solución:* uso directo de rutas absolutas (`/seller/courses`)
+    para mejorar compatibilidad.
 
 ------------------------------------------------------------------------
 
 ## ⚙️ Instalación Local
 
-Esta guía asume que tienes instalados **PHP (8.2+), Composer, y Node.js
-(con NPM)**.
+Requisitos previos:\
+✔️ PHP 8.2+\
+✔️ Composer\
+✔️ Node.js + NPM\
+✔️ SQLite / MySQL / PostgreSQL
 
-### 🔹 Paso 1: Clonar e Instalar Dependencias
+------------------------------------------------------------------------
+
+### 🔹 **Paso 1: Clonar e Instalar Dependencias**
 
 ``` bash
 git clone https://github.com/AnthonnyM31/Proyecto_NexusV-V2.git
@@ -118,44 +117,64 @@ composer install
 npm install
 ```
 
-### 🔹 Paso 2: Configurar, Migrar y Sembrar Administrador
+------------------------------------------------------------------------
 
-Crear la base de datos y la cuenta de administrador Maestro inicial.
+### 🔹 **Paso 2: Configurar, Migrar y Crear Usuario Maestro**
 
 ``` bash
+# Crear base de datos SQLite (opcional)
 touch database/database.sqlite
+
+# Ejecutar migraciones
 php artisan migrate
+
+# Sembrar Administrador Maestro y usuarios de prueba
 php artisan db:seed --class=AdminSeeder
 ```
 
-### 🔹 Paso 3: Ejecutar la Aplicación
+Cuenta inicial: - **Email:** admin@nexusv.com\
+- **Password:** password123
+
+------------------------------------------------------------------------
+
+### 🔹 **Paso 3: Ejecutar la Aplicación**
+
+Ejecutar backend y frontend en paralelo:
 
 ``` bash
 php artisan serve
 npm run dev
 ```
 
-URL local: http://127.0.0.1:8000
+URL local:\
+👉 http://127.0.0.1:8000
 
 ------------------------------------------------------------------------
 
-## 🧪 Flujo de Pruebas Funcionales
+## 🧪 Flujo de Pruebas
 
-### 🔸 Administrador Maestro
+### 🔸 **Administrador Maestro**
 
--   Inicia sesión con admin@nexusv.com / password123.
--   Verifica acceso total a usuarios y cursos globales.
--   Confirma que puedes editar/eliminar cursos de cualquier vendedor.
+-   Acceso a panel global.\
+-   Edición y eliminación de cualquier curso.\
+-   Verificación de permisos sin restricciones.
 
-### 🔸 Vendedor / Comprador
+### 🔸 **Vendedor**
 
--   Vendedor: publica un curso.
--   Comprador: se inscribe y verifica sus cursos.
+-   Creación/publicación de cursos.\
+-   Gestión acotada únicamente a su contenido.
+
+### 🔸 **Comprador**
+
+-   Inscripción en cursos.\
+-   Visualización en "Mis Cursos Inscritos".
 
 ------------------------------------------------------------------------
 
 ## 🌎 Despliegue y Repositorio
 
-El proyecto está listo para Render con PostgreSQL.
+El proyecto está optimizado para despliegue en **Render** utilizando
+**PostgreSQL**.
 
-Repositorio: https://github.com/AnthonnyM31/Proyecto_NexusV-V2
+🔗 Repositorio Oficial:\
+https://github.com/AnthonnyM31/Proyecto_NexusV-V2
