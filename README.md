@@ -1,171 +1,180 @@
-<p align="center">
-  <a href="https://laravel.com" target="_blank">
-    <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
-  </a>
-</p>
 
-<p align="center">
-  <a href="https://github.com/AnthonnyM31/Proyecto_NexusV-V2">
-    <img src="https://img.shields.io/badge/Status-Development-blue" alt="Status">
-  </a>
-  <a href="https://packagist.org/packages/laravel/framework">
-    <img src="https://img.shields.io/badge/Framework-Laravel%2011%2B-red" alt="Laravel Version">
-  </a>
-  <a href="https://github.com/AnthonnyM31/Proyecto_NexusV-V2/blob/main/LICENSE">
-    <img src="https://img.shields.io/packagist/l/laravel/framework" alt="License">
-  </a>
-</p>
+# 🚀 Proyecto NexusV‑V2
 
----
+### Plataforma de Cursos con Control Jerárquico Avanzado
 
-# 🚀 Proyecto NexusV-V2  
-**Plataforma de Cursos con Roles Diferenciados**
+**NexusV‑V2** es una plataforma web desarrollada en **Laravel 11+** que
+simula un sistema completo de **gestión y venta de cursos en tiempo
+real**.\
+El proyecto se centra fuertemente en la **administración de roles**, el
+**control de permisos** y la gestión integral de usuarios, cursos e
+inscripciones.
 
-**NexusV-V2** es una plataforma de ingeniería web desarrollada en **Laravel** que simula un sistema de **venta y gestión de cursos en tiempo real**.  
-Su arquitectura se basa en la separación de roles: **Vendedor** y **Comprador**, permitiendo gestionar la publicación, compra e inscripción a cursos.
+Su estructura se basa en cuatro perfiles principales:\
+**Administrador Maestro**, **Administrador Secundario**, **Vendedor** y
+**Comprador**, cada uno con capacidades cuidadosamente aisladas mediante
+**Gates**, **Policies** y verificaciones adicionales.
 
----
+------------------------------------------------------------------------
 
 ## 📚 Índice
 
-1. [🧩 Stack Tecnológico](#-stack-tecnológico)  
-2. [💡 Lecciones Aprendidas](#-lecciones-aprendidas)  
-3. [⚙️ Instalación Local](#️-instalación-local)  
-4. [🧪 Flujo de Pruebas](#-flujo-de-pruebas)  
-5. [🌎 Despliegue y Repositorio](#-despliegue-y-repositorio)
+1.  [🔑 Roles y Jerarquía](#-roles-y-jerarquía)\
+2.  [💡 Lecciones Aprendidas](#-lecciones-aprendidas)\
+3.  [⚙️ Instalación Local](#️-instalación-local)\
+4.  [🧪 Flujo de Pruebas](#-flujo-de-pruebas)\
+5.  [🌎 Despliegue y Repositorio](#-despliegue-y-repositorio)
 
----
+------------------------------------------------------------------------
 
-## 🧩 Stack Tecnológico
+## 🔑 Roles y Jerarquía
 
-| Componente | Versión | Propósito |
-| :--- | :--- | :--- |
-| **Framework** | Laravel 11+ | Backend PHP (lógica de negocio y API). |
-| **Frontend** | Blade + Vite + Tailwind CSS | Interfaz de usuario, estilos y compilación de assets. |
-| **Base de Datos** | SQLite (Desarrollo) / PostgreSQL (Producción) | Almacenamiento de datos. |
-| **Autenticación** | Laravel Breeze | Sistema de login y registro multi-rol. |
+La plataforma implementa un sistema jerárquico pensado para operaciones
+reales de manejo de personal y control administrativo.
 
----
+### 🏆 **Administrador Maestro (Super Admin)**
+
+-   Acceso total a todo el sistema.\
+-   Puede crear/eliminar a cualquier usuario, incluyendo Admins
+    Secundarios.\
+-   Inmune a restricciones de edición y propiedad en cursos y recursos.\
+-   Puede ver, modificar y eliminar **cualquier** registro sin
+    limitación.
+
+### 🛡️ **Administrador Secundario**
+
+-   Maneja tareas operativas: usuarios, cursos e inscripciones.\
+-   **No puede modificar ni eliminar** al Administrador Maestro.\
+-   Puede editar cursos de vendedores, pero siempre bajo restricciones
+    de seguridad.
+
+### 🛒 **Vendedor**
+
+-   Puede crear, gestionar y publicar cursos propios.\
+-   No puede editar cursos de otros vendedores.\
+-   Interfaz reducida enfocada únicamente en su catálogo.
+
+### 🎓 **Comprador**
+
+-   Puede explorar el catálogo.\
+-   Puede inscribirse en cursos y visualizarlos en su dashboard
+    personal.\
+-   Acceso limitado únicamente a experiencias de aprendizaje.
+
+------------------------------------------------------------------------
 
 ## 💡 Lecciones Aprendidas
 
-Durante el desarrollo se presentaron diversos desafíos técnicos, especialmente relacionados con el entorno de desarrollo y la configuración del sistema de autenticación:
+Durante el desarrollo del proyecto se encontraron problemas técnicos
+complejos que ayudaron a fortalecer la estabilidad del sistema:
 
-- **Errores Cíclicos en Entorno Windows:**  
-  Problemas con `BindingResolutionException` y `BadMethodCallException` por inestabilidad de Composer.
+### 🔧 Problemas y Soluciones
 
-- **Fallos en Clases de Breeze:**  
-  Controladores como `ProfileController` y `AuthenticatedSessionController` no se generaron correctamente.
+-   **Clases críticas de Breeze no generadas**\
+    Breeze omitió archivos esenciales como
+    `AuthenticatedSessionController`.\
+    → *Solución:* creación manual, revisión de namespaces y limpieza del
+    entorno.
 
-- **Reestructuración de Rutas:**  
-  Se eliminaron alias de rutas (por ejemplo, de `route('seller.courses.index')` a `/seller/courses`) para mejorar la estabilidad.
+-   **Error 403 para el Admin Maestro al editar cursos ajenos**\
+    La verificación `$course->user_id === Auth::id()` bloqueaba al Admin
+    Maestro.\
+    → *Solución:* excepción explícita mediante
+    `if (Auth::user()->isMasterAdmin())`.
 
-- **Corrupción de Base de Datos:**  
-  La tabla `enrollments` se generó sin claves foráneas, requiriendo ejecutar `php artisan migrate:fresh`.
+-   **Esquema de base de datos corrupto**\
+    La tabla `enrollments` se generó sin `course_id`.\
+    → *Solución:* `php artisan migrate:fresh` y verificación del esquema
+    completo.
 
----
+-   **Problemas con alias de rutas en Windows**\
+    Vistas que dependían de `route('seller.courses.index')` fallaban.\
+    → *Solución:* uso directo de rutas absolutas (`/seller/courses`)
+    para mejorar compatibilidad.
+
+------------------------------------------------------------------------
 
 ## ⚙️ Instalación Local
 
-Esta guía asume que tienes instalados **PHP (8.2 o superior)**, **Composer**, y **Node.js (con NPM)**.
+Requisitos previos:\
+✔️ PHP 8.2+\
+✔️ Composer\
+✔️ Node.js + NPM\
+✔️ SQLite / MySQL / PostgreSQL
 
-### 🔹 Paso 1: Clonar el Repositorio
+------------------------------------------------------------------------
 
-```bash
+### 🔹 **Paso 1: Clonar e Instalar Dependencias**
+
+``` bash
 git clone https://github.com/AnthonnyM31/Proyecto_NexusV-V2.git
 cd Proyecto_NexusV-V2
-```
 
----
-
-### 🔹 Paso 2: Configurar el Entorno
-
-Copia el archivo de entorno y genera la clave de la aplicación:
-
-```bash
 copy .env.example .env
 php artisan key:generate
-```
 
----
-
-### 🔹 Paso 3: Instalar Dependencias
-
-Instala las dependencias de PHP y JavaScript:
-
-```bash
 composer install
 npm install
 ```
 
----
+------------------------------------------------------------------------
 
-### 🔹 Paso 4: Configurar y Migrar la Base de Datos
+### 🔹 **Paso 2: Configurar, Migrar y Crear Usuario Maestro**
 
-El proyecto usa **SQLite** para desarrollo local.  
-Crea el archivo de base de datos y ejecuta las migraciones:
-
-```bash
+``` bash
+# Crear base de datos SQLite (opcional)
 touch database/database.sqlite
+
+# Ejecutar migraciones
 php artisan migrate
+
+# Sembrar Administrador Maestro y usuarios de prueba
+php artisan db:seed --class=AdminSeeder
 ```
 
-#### ⚠️ Si aparecen errores de clase o rutas:
-Ejecuta lo siguiente para limpiar cachés y autoloads:
+Cuenta inicial: - **Email:** admin@nexusv.com\
+- **Password:** password123
 
-```bash
-php artisan optimize:clear
-composer dump-autoload -o
-```
+------------------------------------------------------------------------
 
----
+### 🔹 **Paso 3: Ejecutar la Aplicación**
 
-### 🔹 Paso 5: Ejecutar la Aplicación
+Ejecutar backend y frontend en paralelo:
 
-Abre **dos terminales** en la raíz del proyecto.
-
-**Terminal 1 (Backend - Laravel):**
-```bash
+``` bash
 php artisan serve
-```
-
-**Terminal 2 (Frontend - Vite):**
-```bash
 npm run dev
 ```
 
-**URL local:**  
-👉 [http://127.0.0.1:8000](http://127.0.0.1:8000)
+URL local:\
+👉 http://127.0.0.1:8000
 
----
+------------------------------------------------------------------------
 
-## 🧪 Flujo de Pruebas Funcionales
+## 🧪 Flujo de Pruebas
 
-Sigue los pasos para verificar la funcionalidad completa:
+### 🔸 **Administrador Maestro**
 
-### 🔸 Registro y Login  
-- Accede a `/register`.  
-- Verifica el campo desplegable **“Registrarse como”**.
+-   Acceso a panel global.\
+-   Edición y eliminación de cualquier curso.\
+-   Verificación de permisos sin restricciones.
 
-### 🔸 Rol Vendedor  
-- Regístrate como *Vendedor*.  
-- Publica un curso nuevo.  
-- Verifica que el curso aparezca como **Publicado**.
+### 🔸 **Vendedor**
 
-### 🔸 Rol Comprador  
-- Regístrate como *Comprador*.  
-- Accede a **Explorar Cursos** y selecciona un curso.  
-- Haz clic en **“Inscribirse ahora”**.  
-- Confirma que aparece en **Mis Cursos Inscritos**.
+-   Creación/publicación de cursos.\
+-   Gestión acotada únicamente a su contenido.
 
----
+### 🔸 **Comprador**
+
+-   Inscripción en cursos.\
+-   Visualización en "Mis Cursos Inscritos".
+
+------------------------------------------------------------------------
 
 ## 🌎 Despliegue y Repositorio
 
-El proyecto está preparado para su despliegue en **Render**.
+El proyecto está optimizado para despliegue en **Render** utilizando
+**PostgreSQL**.
 
-- **Repositorio Oficial:**  
-  🔗 [https://github.com/AnthonnyM31/Proyecto_NexusV-V2](https://github.com/AnthonnyM31/Proyecto_NexusV-V2)
-
-- **Ejemplo de Deploy:**  
-  🔗 [https://nexusv-web-service.onrender.com/](https://nexusv-web-service.onrender.com/)
+🔗 Repositorio Oficial:\
+https://github.com/AnthonnyM31/Proyecto_NexusV-V2
