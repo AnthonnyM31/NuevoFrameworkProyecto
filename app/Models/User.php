@@ -4,7 +4,8 @@ namespace App\Models;
 
 // Importaciones necesarias
 use App\Models\Course;
-use App\Models\Enrollment; // Nueva importación
+use App\Models\Enrollment;
+use App\Models\PaymentMethod; // <-- NUEVA IMPORTACIÓN
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -18,7 +19,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', // Ya añadido
+        'role',
     ];
 
     protected $hidden = [
@@ -45,6 +46,23 @@ class User extends Authenticatable
     {
         return $this->hasMany(Enrollment::class);
     }
+    
+    /**
+     * Get the payment methods for the user.
+     */
+    public function paymentMethods(): HasMany // <-- RELACIÓN FALTANTE AGREGADA
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+    
+    /**
+     * Get the payments made by the user (needed for history).
+     */
+    public function payments(): HasMany // <-- RELACIÓN AGREGADA para ProfileController::payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
 
     // =======================================================
     // NUEVOS HELPERS PARA ROLES JERÁRQUICOS

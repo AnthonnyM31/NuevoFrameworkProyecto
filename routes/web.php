@@ -8,16 +8,16 @@ use App\Http\Controllers\Admin\UserController; // Importación para gestión de 
 use App\Http\Controllers\Admin\AdminController; // Importación para gestión global de cursos/inscripciones
 use App\Http\Controllers\Seller\ModuleController; // NUEVA IMPORTACIÓN (Fase 2)
 use App\Http\Controllers\CourseProgressController; // NUEVA IMPORTACIÓN (Fase 2)
+use App\Http\Controllers\PaymentController; // IMPORTACIÓN CLAVE
+use App\Http\Controllers\PaymentMethodController; // <-- NUEVA IMPORTACIÓN
+use App\Http\Controllers\Seller\ReportsController; // <-- NUEVA IMPORTACIÓN
+use App\Http\Controllers\CertificateController; // RUTA PÚBLICA PARA LA VERIFICACIÓN DE CERTIFICADOS
 use Illuminate\Support\Facades\Route;
 use App\Models\Enrollment;
-// RUTA PÚBLICA PARA LA VERIFICACIÓN DE CERTIFICADOS
-use App\Http\Controllers\CertificateController;
+
 
 Route::get('/certificate/verify/{uuid}', [CertificateController::class, 'verify'])
     ->name('certificate.verify');
-
-
-
 
 
 // --------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ Route::get('/', function () {
     }
 
     // Si no está autenticado, lo enviamos a la vista pública de cursos.
-    return redirect()->route('courses.index'); 
+    return redirect()->route('courses.index');
 });
 
 // Rutas Públicas de Cursos (Listado y Detalle)
@@ -45,6 +45,37 @@ Route::get('/courses/{course}', [PublicCourseController::class, 'show'])->name('
 // --------------------------------------------------------------------------------------
 Route::middleware('auth')->group(function () {
 
+    // =======================================================
+    // 💳 RUTAS DE PAGO SIMULADO (PaymentController)
+    // =======================================================
+
+    // 1. Mostrar el formulario de checkout (adaptado para Quick Checkout o registro)
+    Route::get('/courses/{course}/checkout', [PaymentController::class, 'checkout'])
+        ->name('payment.checkout');
+
+    // 2. Procesar el pago simulado (POST)
+    Route::post('/payment/process/{course}', [PaymentController::class, 'processPayment'])
+        ->name('payment.process');
+    
+    // 3. Redirección de éxito
+    Route::get('/payment/success/{course}', [PaymentController::class, 'success'])
+        ->name('payment.success');
+
+    // 4. Redirección de fallo
+    Route::get('/payment/failure/{course}', [PaymentController::class, 'failure'])
+        ->name('payment.failure');
+
+
+    // =======================================================
+    // 💳 RUTAS DE GESTIÓN DE MÉTODOS DE PAGO (PaymentMethodController)
+    // =======================================================
+    Route::prefix('payment-methods')->group(function () {
+        Route::post('/', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
+        Route::patch('/{paymentMethod}/default', [PaymentMethodController::class, 'setDefault'])->name('payment-methods.set-default');
+        Route::delete('/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+    });
+
+
     // RUTA DE CERTIFICADO: USAR EL ALIAS DE LA CLASE IMPORTADA    
     Route::get('courses/{course}/certify', [CourseProgressController::class, 'certify'])
         ->name('courses.certify');
@@ -52,14 +83,17 @@ Route::middleware('auth')->group(function () {
     // RUTA DE CONTENIDO DEL CURSO: USAR EL ALIAS DE LA CLASE IMPORTADA    
     Route::get('/courses/{course}/content', [PublicCourseController::class, 'content'])
         ->name('courses.content');
+        
     // Rutas de Perfil, Inscripción... (CÓDIGO EXISTENTE)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/payments', [ProfileController::class, 'payments'])->name('profile.payments'); // <-- NUEVA RUTA: Historial de Pagos
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Rutas de Inscripción (Enrollment)
-    Route::post('/enroll/{course}', [EnrollmentController::class, 'store'])
-        ->name('enroll.store');
+    // Rutas de Inscripción (Enrollment) - Queda inactiva, la compra la reemplaza.
+    // **NOTA:** Deberías considerar eliminar esta ruta si el pago es obligatorio.
+    // Route::post('/enroll/{course}', [EnrollmentController::class, 'store'])
+    //     ->name('enroll.store');
 
     // =======================================================
     // NUEVAS RUTAS DE PROGRESO (Fase 2)
@@ -78,7 +112,7 @@ Route::middleware('auth')->group(function () {
         
         // Gestión de Usuarios (CRUD)
         Route::resource('users', UserController::class)
-            ->names('admin.users') 
+            ->names('admin.users')
             ->only(['index', 'create', 'edit', 'update', 'destroy']);
         
         // Ruta para crear un nuevo Administrador Secundario (POST)
@@ -92,7 +126,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('enrollments/{enrollment}', [AdminController::class, 'destroyEnrollment'])->name('admin.enrollments.destroy');
     });
 
-    // 4. RUTAS PARA VENDEDORES (Gestión de Cursos)
+    // 4. RUTAS PARA VENDEDORES (Gestión de Cursos y Reportes)
     // *** MODIFICACIÓN A SINTAXIS ::CLASS USANDO EL ALIAS ***
     Route::resource('seller/courses', SellerCourseController::class)
         ->names('seller.courses')
@@ -101,13 +135,20 @@ Route::middleware('auth')->group(function () {
     // *******************************************************
     
     // =======================================================
+    // RUTAS DE REPORTES DEL VENDEDOR
+    // =======================================================
+    Route::get('seller/reports', [ReportsController::class, 'index'])
+        ->name('seller.reports.index')
+        ->middleware('can:is-seller');
+    
+    // =======================================================
     // RUTAS ANIDADAS DE MÓDULOS (Fase 2)
     // =======================================================
     
     // Rutas de Gestión de Módulos (VENDEDOR)
     Route::resource('seller/courses.modules', ModuleController::class)
         ->names('seller.modules')
-        ->except(['index', 'show']) 
+        ->except(['index', 'show'])
         ->middleware('can:is-seller');
     
     // Ruta Dashboard (con Lógica de Redirección por Rol)
@@ -121,11 +162,12 @@ Route::middleware('auth')->group(function () {
 
         // 2. Redirección del Vendedor
         if ($user->isSeller()) {
-            return redirect('/seller/courses'); 
+            return redirect()->route('seller.courses.index'); // Redirigir al listado de cursos del vendedor
         }
 
         // 3. Lógica del Comprador (Dashboard)
-        $enrollments = Enrollment::with('course.user') 
+        // Nota: Mantenemos la lógica de la matrícula aquí, aunque el pago la crea
+        $enrollments = Enrollment::with('course.user')
             ->where('user_id', $user->id)
             ->latest()
             ->get();

@@ -9,6 +9,20 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
 
+                {{-- MUESTRA MENSAJES FLASH DE ÉXITO O ERROR DE PAGO --}}
+                @if (session('success'))
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        <strong class="font-bold">¡Éxito!</strong>
+                        <span class="block sm:inline">{{ session('success') }}</span>
+                    </div>
+                @elseif (session('error'))
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        <strong class="font-bold">Error de Pago:</strong>
+                        <span class="block sm:inline">{{ session('error') }}</span>
+                    </div>
+                @endif
+                {{-- FIN DE MENSAJES FLASH --}}
+
                 <div class="flex flex-col md:flex-row md:space-x-8">
                     
                     <div class="md:w-2/3">
@@ -39,25 +53,26 @@
                             @auth
                                 @if(auth()->user()->isBuyer())
                                     
+                                    @php
+                                        // Usamos la misma lógica que tu función isEnrolled
+                                        $isEnrolled = $course->isEnrolled(Auth::id());
+                                    @endphp
+
                                     {{-- 1. Si está inscrito: Muestra botón de ACCESO --}}
-                                    @if ($course->isEnrolled(Auth::id()))
+                                    @if ($isEnrolled)
                                         <a href="{{ route('courses.content', $course) }}" class="w-full inline-block text-center py-3 px-4 rounded-md shadow-sm text-lg font-medium text-white bg-green-600 hover:bg-green-700">
                                             ✅ ACCEDER AL CONTENIDO
                                         </a>
                                     @else
-                                        {{-- 2. Si NO está inscrito: Muestra formulario de inscripción --}}
-                                        <form method="POST" action="{{ route('enroll.store', $course) }}" class="mt-4">
-                                            @csrf
-                                            <x-primary-button class="w-full justify-center bg-indigo-600 hover:bg-indigo-700">
-                                                {{ __('INSCRIBIRSE AHORA') }}
-                                            </x-primary-button>
-                                        </form>
+                                        {{-- 2. Si NO está inscrito: Muestra el botón para ir a la Pasarela de Pago --}}
+                                        <a href="{{ route('payment.checkout', $course) }}" class="w-full inline-block text-center py-3 px-4 rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                                            💳 PAGAR Y SUSCRIBIRME (${{ number_format($course->price, 2) }})
+                                        </a>
+                                        <p class="mt-2 text-center text-sm text-gray-500">Acceso inmediato tras el pago simulado.</p>
                                     @endif
                                     
-                                    {{-- Mensajes de sesión --}}
-                                    @if (session('success'))
-                                        <div class="bg-green-100 text-green-700 p-2 mt-3 rounded">{{ session('success') }}</div>
-                                    @elseif (session('info'))
+                                    {{-- El mensaje 'info' que envía el controlador si ya está matriculado --}}
+                                    @if (session('info'))
                                         <div class="bg-blue-100 text-blue-700 p-2 mt-3 rounded">{{ session('info') }}</div>
                                     @endif
 

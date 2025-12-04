@@ -7,15 +7,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Module;
+use App\Models\Payment; // Importado
 
 class Course extends Model
 {
     use HasFactory;
 
+    // ... (fillable, casts, y user() se mantienen igual) ...
+    
     public function modules(): HasMany
     {
-    // Cargar módulos ordenados por el campo sequence_order
-    return $this->hasMany(Module::class)->orderBy('sequence_order'); 
+        // Cargar módulos ordenados por el campo sequence_order
+        return $this->hasMany(Module::class)->orderBy('sequence_order'); 
     }
 
     protected $fillable = [
@@ -28,7 +31,7 @@ class Course extends Model
         'is_published',
     ];
     protected $casts = [
-        'scheduled_date' => 'datetime', //si no agregamos esta linea protected al guardar la fecha tentativa en un curso se daña
+        'scheduled_date' => 'datetime',
     ];
 
     /**
@@ -38,8 +41,8 @@ class Course extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
-    // --- NUEVAS RELACIONES Y HELPERS ---
+
+    // --- RELACIONES EXISTENTES ---
 
     /**
      * Get the users enrolled in this course.
@@ -55,5 +58,16 @@ class Course extends Model
     public function isEnrolled($userId): bool
     {
         return $this->enrollments()->where('user_id', $userId)->exists();
+    }
+    
+    // --- NUEVA RELACIÓN PARA PAGOS ---
+
+    /**
+     * Get all successful payments for this course.
+     */
+    public function successfulPayments(): HasMany
+    {
+        return $this->hasMany(Payment::class)
+                    ->where('status', 'succeeded');
     }
 }

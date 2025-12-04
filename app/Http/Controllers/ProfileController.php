@@ -16,10 +16,30 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        // Añadimos las relaciones necesarias para mostrar métodos de pago
+        $user = $request->user()->load('paymentMethods'); 
+        
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
+    
+    /**
+     * Muestra el historial de pagos del usuario comprador.
+     */
+    public function payments(Request $request): View
+    {
+        $user = $request->user();
+        
+        // Obtenemos los pagos exitosos y fallidos con los datos del curso
+        $payments = $user->payments()
+            ->with('course') // Asumiendo que has agregado la relación 'payments' al modelo User y 'course' al modelo Payment
+            ->latest()
+            ->get();
+            
+        return view('profile.payments', compact('payments'));
+    }
+
 
     /**
      * Update the user's profile information.
