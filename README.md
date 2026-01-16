@@ -64,3 +64,13 @@ Se actualizaron los componentes Blade reutilizables (`x-primary-button`, `x-text
     ```
 
 El proyecto ahora cuenta con una interfaz robusta, responsiva y mantenible basada en el estándar de la industria Bootstrap 5.
+
+## 👥 Usuarios por Defecto (Seeders)
+
+Para facilitar las pruebas, se han creado los siguientes usuarios por defecto en la base de datos:
+
+| Rol | Nombre | Email | Contraseña |
+| :--- | :--- | :--- | :--- |
+| 👑 **Admin Maestro** | Admin Maestro | `admin@nexusv.com` | `password123` |
+| 💼 **Vendedor** | Vendedor Demo | `seller@test.com` | `password123` |
+| 🛒 **Comprador** | Comprador Demo | `buyer@test.com` | `password123` |
