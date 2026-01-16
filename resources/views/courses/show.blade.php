@@ -1,94 +1,101 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="h4 font-weight-bold text-dark mb-0">
             {{ $course->title }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+    <div class="py-5">
+        <div class="container">
+            <div class="card shadow-lg border-0 overflow-hidden">
+                <div class="card-body p-5">
 
-                {{-- MUESTRA MENSAJES FLASH DE ÉXITO O ERROR DE PAGO --}}
-                @if (session('success'))
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                        <strong class="font-bold">¡Éxito!</strong>
-                        <span class="block sm:inline">{{ session('success') }}</span>
-                    </div>
-                @elseif (session('error'))
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                        <strong class="font-bold">Error de Pago:</strong>
-                        <span class="block sm:inline">{{ session('error') }}</span>
-                    </div>
-                @endif
-                {{-- FIN DE MENSAJES FLASH --}}
-
-                <div class="flex flex-col md:flex-row md:space-x-8">
-                    
-                    <div class="md:w-2/3">
-                        <h1 class="text-3xl font-extrabold text-gray-900 mb-4">{{ $course->title }}</h1>
-                        <p class="text-lg text-indigo-600 mb-6">{{ $course->header }}</p>
-                        
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Descripción Completa</h3>
-                        <p class="text-gray-700 leading-relaxed mb-6">{{ $course->description }}</p>
-                        
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <p class="text-sm text-gray-600">
-                                🗓️ **Fecha y Hora Tentativa:** <span class="font-medium text-gray-800">{{ $course->scheduled_date->format('d/m/Y H:i') }}</span>
-                            </p>
-                            <p class="text-sm text-gray-600 mt-2">
-                                👨‍🏫 **Impartido por:** <span class="font-medium text-gray-800">{{ $course->user->name }}</span>
-                            </p>
+                    {{-- MUESTRA MENSAJES FLASH DE ÉXITO O ERROR DE PAGO --}}
+                    @if (session('success'))
+                        <div class="alert alert-success mb-4" role="alert">
+                            <strong class="fw-bold">¡Éxito!</strong> {{ session('success') }}
                         </div>
-                    </div>
+                    @elseif (session('error'))
+                        <div class="alert alert-danger mb-4" role="alert">
+                            <strong class="fw-bold">Error de Pago:</strong> {{ session('error') }}
+                        </div>
+                    @endif
+                    {{-- FIN DE MENSAJES FLASH --}}
 
-                    <div class="md:w-1/3 mt-8 md:mt-0 sticky top-0">
-                        <div class="p-6 bg-green-50 border-2 border-green-200 rounded-xl shadow-lg">
-                            <div class="text-center mb-4">
-                                <span class="text-3xl font-extrabold text-green-700">${{ number_format($course->price, 2) }}</span>
-                                <p class="text-sm text-gray-500">Precio de Inscripción</p>
+                    <div class="row gx-5">
+
+                        <div class="col-md-8">
+                            <h1 class="display-6 fw-bold text-dark mb-3">{{ $course->title }}</h1>
+                            <p class="lead text-primary mb-4">{{ $course->header }}</p>
+
+                            <h3 class="h5 fw-bold text-dark mb-2">Descripción Completa</h3>
+                            <p class="text-muted mb-4">{{ $course->description }}</p>
+
+                            <div class="bg-light p-4 rounded border">
+                                <p class="small text-muted mb-2">
+                                    🗓️ <strong>Fecha y Hora Tentativa:</strong> <span
+                                        class="text-dark">{{ $course->scheduled_date->format('d/m/Y H:i') }}</span>
+                                </p>
+                                <p class="small text-muted mb-0">
+                                    👨‍🏫 <strong>Impartido por:</strong> <span
+                                        class="text-dark">{{ $course->user->name }}</span>
+                                </p>
                             </div>
-
-                            {{-- Botón de Inscripción/Acceso a Contenido --}}
-                            @auth
-                                @if(auth()->user()->isBuyer())
-                                    
-                                    @php
-                                        // Usamos la misma lógica que tu función isEnrolled
-                                        $isEnrolled = $course->isEnrolled(Auth::id());
-                                    @endphp
-
-                                    {{-- 1. Si está inscrito: Muestra botón de ACCESO --}}
-                                    @if ($isEnrolled)
-                                        <a href="{{ route('courses.content', $course) }}" class="w-full inline-block text-center py-3 px-4 rounded-md shadow-sm text-lg font-medium text-white bg-green-600 hover:bg-green-700">
-                                            ✅ ACCEDER AL CONTENIDO
-                                        </a>
-                                    @else
-                                        {{-- 2. Si NO está inscrito: Muestra el botón para ir a la Pasarela de Pago --}}
-                                        <a href="{{ route('payment.checkout', $course) }}" class="w-full inline-block text-center py-3 px-4 rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-                                            💳 PAGAR Y SUSCRIBIRME (${{ number_format($course->price, 2) }})
-                                        </a>
-                                        <p class="mt-2 text-center text-sm text-gray-500">Acceso inmediato tras el pago simulado.</p>
-                                    @endif
-                                    
-                                    {{-- El mensaje 'info' que envía el controlador si ya está matriculado --}}
-                                    @if (session('info'))
-                                        <div class="bg-blue-100 text-blue-700 p-2 mt-3 rounded">{{ session('info') }}</div>
-                                    @endif
-
-                                @else
-                                    <p class="text-center text-sm text-red-500">Solo los compradores pueden inscribirse.</p>
-                                @endif
-                            @else
-                                {{-- Usuario no autenticado --}}
-                                <p class="text-center text-sm text-gray-500 mb-4">Debes iniciar sesión para inscribirte.</p>
-                                <a href="{{ route('login') }}" class="w-full inline-block text-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    {{ __('Iniciar Sesión') }}
-                                </a>
-                            @endauth
                         </div>
+
+                        <div class="col-md-4 mt-4 mt-md-0">
+                            <div class="sticky-top" style="top: 20px;">
+                                <div class="p-4 bg-light border border-success rounded-3 shadow-sm text-center">
+                                    <div class="mb-4">
+                                        <span
+                                            class="display-6 fw-bold text-success">${{ number_format($course->price, 2) }}</span>
+                                        <p class="small text-muted">Precio de Inscripción</p>
+                                    </div>
+
+                                    {{-- Botón de Inscripción/Acceso a Contenido --}}
+                                    @auth
+                                        @if(auth()->user()->isBuyer())
+
+                                            @php
+                                                // Usamos la misma lógica que tu función isEnrolled
+                                                $isEnrolled = $course->isEnrolled(Auth::id());
+                                            @endphp
+
+                                            {{-- 1. Si está inscrito: Muestra botón de ACCESO --}}
+                                            @if ($isEnrolled)
+                                                <a href="{{ route('courses.content', $course) }}"
+                                                    class="btn btn-success w-100 py-3 fw-bold shadow-sm">
+                                                    ✅ ACCEDER AL CONTENIDO
+                                                </a>
+                                            @else
+                                                {{-- 2. Si NO está inscrito: Muestra el botón para ir a la Pasarela de Pago --}}
+                                                <a href="{{ route('payment.checkout', $course) }}"
+                                                    class="btn btn-primary w-100 py-3 fw-bold shadow-sm">
+                                                    💳 PAGAR Y SUSCRIBIRME (${{ number_format($course->price, 2) }})
+                                                </a>
+                                                <p class="mt-2 small text-muted">Acceso inmediato tras el pago simulado.</p>
+                                            @endif
+
+                                            {{-- El mensaje 'info' que envía el controlador si ya está matriculado --}}
+                                            @if (session('info'))
+                                                <div class="alert alert-info mt-3 py-2 small">{{ session('info') }}</div>
+                                            @endif
+
+                                        @else
+                                            <p class="small text-danger">Solo los compradores pueden inscribirse.</p>
+                                        @endif
+                                    @else
+                                        {{-- Usuario no autenticado --}}
+                                        <p class="small text-muted mb-3">Debes iniciar sesión para inscribirte.</p>
+                                        <a href="{{ route('login') }}" class="btn btn-primary w-100">
+                                            {{ __('Iniciar Sesión') }}
+                                        </a>
+                                    @endauth
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                    
                 </div>
             </div>
         </div>

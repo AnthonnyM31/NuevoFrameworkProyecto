@@ -1,180 +1,66 @@
+# Proyecto Migrado: NexusV (Tailwind a Bootstrap 5)
 
-# 🚀 Proyecto NexusV‑V2
+Este proyecto ha sido sometido a una migración completa de su framework de estilos frontend, pasando de **Tailwind CSS** a **Bootstrap 5**, manteniendo intacta la lógica de negocio y el backend en Laravel.
 
-### Plataforma de Cursos con Control Jerárquico Avanzado
+## 🚀 Resumen del Procedimiento de Migración
 
-**NexusV‑V2** es una plataforma web desarrollada en **Laravel 11+** que
-simula un sistema completo de **gestión y venta de cursos en tiempo
-real**.\
-El proyecto se centra fuertemente en la **administración de roles**, el
-**control de permisos** y la gestión integral de usuarios, cursos e
-inscripciones.
+El objetivo principal fue reemplazar la capa visual sin afectar la funcionalidad existente. A continuación se detallan los pasos realizados:
 
-Su estructura se basa en cuatro perfiles principales:\
-**Administrador Maestro**, **Administrador Secundario**, **Vendedor** y
-**Comprador**, cada uno con capacidades cuidadosamente aisladas mediante
-**Gates**, **Policies** y verificaciones adicionales.
+### 1. Limpieza y Configuración Inicial
+- **Eliminación de Tailwind**: Se desinstalaron los paquetes `tailwindcss`, `postcss` y `autoprefixer`. Se eliminaron los archivos de configuración asociados (`tailwind.config.js`, `postcss.config.js`).
+- **Instalación de Bootstrap**: Se instaló `bootstrap` (versión 5.3) y `@popperjs/core` vía NPM. También se instaló `sass` para el preprocesamiento de estilos.
+- **Configuración de Vite**: Se actualizó `vite.config.js` para procesar archivos SASS (`app.scss`) en lugar de CSS plano, y se configuró la importación de JavaScript de Bootstrap.
 
-------------------------------------------------------------------------
+### 2. Migración de Layouts (Estructura Base)
+- **App Layout**: Se reemplazaron las clases de utilidad de Tailwind por los contenedores y Grid system de Bootstrap (`container`, `row`, `col`).
+- **Navigation**: Se reescribió la barra de navegación utilizando el componente `Navbar` de Bootstrap, eliminando la dependencia de Alpine.js para los menús desplegables básicos (aunque Alpine se mantuvo para otras interacciones).
+- **Guest Layout**: Se ajustaron las vistas de autenticación para usar Flexbox utilities de Bootstrap para el centrado y tarjetas (`card`) para los formularios.
 
-## 📚 Índice
+### 3. Migración de Vistas (Blade Views)
+Se rediseñaron todas las vistas del sistema para adoptar la estética "Premium" de Bootstrap:
 
-1.  [🔑 Roles y Jerarquía](#-roles-y-jerarquía)\
-2.  [💡 Lecciones Aprendidas](#-lecciones-aprendidas)\
-3.  [⚙️ Instalación Local](#️-instalación-local)\
-4.  [🧪 Flujo de Pruebas](#-flujo-de-pruebas)\
-5.  [🌎 Despliegue y Repositorio](#-despliegue-y-repositorio)
+- **Autenticación**: Login, Registro, Recuperación de contraseña, etc.
+- **Módulos Principales**:
+  - **Bienvenida (Welcome)**: Nueva Landing Page con componentes Hero y Features.
+  - **Dashboard**: Panel principal con tarjetas informativas.
+  - **Perfil**: Formularios de edición de perfil, cambio de contraseña y gestión de tarjetas de crédito (diseño de pestañas y modales).
+- **Cursos (Público)**:
+  - **Catálogo**: Grid responsivo de tarjetas de cursos.
+  - **Detalle**: Vista detallada con sidebar "sticky" para precios y acciones.
+  - **Reproductor de Contenido**: Interfaz para consumir videos y documentos con barras de progreso.
+- **Gestión (Vendedor y Admin)**:
+  - **Tablas**: Se implementaron tablas estilizadas (`table-hover`) para la gestión de usuarios, cursos e inscripciones.
+  - **Formularios**: Se estandarizaron todos los `input`, `select` y `button` con las clases `form-control`, `form-select` y `btn`.
 
-------------------------------------------------------------------------
+### 4. Componentes Globales
+Se actualizaron los componentes Blade reutilizables (`x-primary-button`, `x-text-input`, `x-modal`, etc.) para que rendericen internamente clases de Bootstrap, asegurando consistencia en todo el sitio.
 
-## 🔑 Roles y Jerarquía
+## 🛠️ Cómo ejecutar este proyecto
 
-La plataforma implementa un sistema jerárquico pensado para operaciones
-reales de manejo de personal y control administrativo.
+1.  **Clonar el repositorio**:
+    ```bash
+    git clone https://github.com/AnthonnyM31/NuevoFrameworkProyecto.git
+    cd NuevoFrameworkProyecto
+    ```
 
-### 🏆 **Administrador Maestro (Super Admin)**
+2.  **Instalar dependencias de PHP**:
+    ```bash
+    composer install
+    ```
 
--   Acceso total a todo el sistema.\
--   Puede crear/eliminar a cualquier usuario, incluyendo Admins
-    Secundarios.\
--   Inmune a restricciones de edición y propiedad en cursos y recursos.\
--   Puede ver, modificar y eliminar **cualquier** registro sin
-    limitación.
+3.  **Instalar dependencias de Node (Frontend)**:
+    ```bash
+    npm install
+    npm run build
+    ```
 
-### 🛡️ **Administrador Secundario**
+4.  **Configurar entorno**:
+    - Duplicar `.env.example` a `.env` y configurar base de datos.
+    - Ejecutar migraciones: `php artisan migrate`.
 
--   Maneja tareas operativas: usuarios, cursos e inscripciones.\
--   **No puede modificar ni eliminar** al Administrador Maestro.\
--   Puede editar cursos de vendedores, pero siempre bajo restricciones
-    de seguridad.
+5.  **Iniciar servidor**:
+    ```bash
+    php artisan serve
+    ```
 
-### 🛒 **Vendedor**
-
--   Puede crear, gestionar y publicar cursos propios.\
--   No puede editar cursos de otros vendedores.\
--   Interfaz reducida enfocada únicamente en su catálogo.
-
-### 🎓 **Comprador**
-
--   Puede explorar el catálogo.\
--   Puede inscribirse en cursos y visualizarlos en su dashboard
-    personal.\
--   Acceso limitado únicamente a experiencias de aprendizaje.
-
-------------------------------------------------------------------------
-
-## 💡 Lecciones Aprendidas
-
-Durante el desarrollo del proyecto se encontraron problemas técnicos
-complejos que ayudaron a fortalecer la estabilidad del sistema:
-
-### 🔧 Problemas y Soluciones
-
--   **Clases críticas de Breeze no generadas**\
-    Breeze omitió archivos esenciales como
-    `AuthenticatedSessionController`.\
-    → *Solución:* creación manual, revisión de namespaces y limpieza del
-    entorno.
-
--   **Error 403 para el Admin Maestro al editar cursos ajenos**\
-    La verificación `$course->user_id === Auth::id()` bloqueaba al Admin
-    Maestro.\
-    → *Solución:* excepción explícita mediante
-    `if (Auth::user()->isMasterAdmin())`.
-
--   **Esquema de base de datos corrupto**\
-    La tabla `enrollments` se generó sin `course_id`.\
-    → *Solución:* `php artisan migrate:fresh` y verificación del esquema
-    completo.
-
--   **Problemas con alias de rutas en Windows**\
-    Vistas que dependían de `route('seller.courses.index')` fallaban.\
-    → *Solución:* uso directo de rutas absolutas (`/seller/courses`)
-    para mejorar compatibilidad.
-
-------------------------------------------------------------------------
-
-## ⚙️ Instalación Local
-
-Requisitos previos:\
-✔️ PHP 8.2+\
-✔️ Composer\
-✔️ Node.js + NPM\
-✔️ SQLite / MySQL / PostgreSQL
-
-------------------------------------------------------------------------
-
-### 🔹 **Paso 1: Clonar e Instalar Dependencias**
-
-``` bash
-git clone https://github.com/AnthonnyM31/Proyecto_NexusV-V2.git
-cd Proyecto_NexusV-V2
-
-copy .env.example .env
-php artisan key:generate
-
-composer install
-npm install
-```
-
-------------------------------------------------------------------------
-
-### 🔹 **Paso 2: Configurar, Migrar y Crear Usuario Maestro**
-
-``` bash
-# Crear base de datos SQLite (opcional)
-touch database/database.sqlite
-
-# Ejecutar migraciones
-php artisan migrate
-
-# Sembrar Administrador Maestro y usuarios de prueba
-php artisan db:seed --class=AdminSeeder
-```
-
-Cuenta inicial: - **Email:** admin@nexusv.com\
-- **Password:** password123
-
-------------------------------------------------------------------------
-
-### 🔹 **Paso 3: Ejecutar la Aplicación**
-
-Ejecutar backend y frontend en paralelo:
-
-``` bash
-php artisan serve
-npm run dev
-```
-
-URL local:\
-👉 http://127.0.0.1:8000
-
-------------------------------------------------------------------------
-
-## 🧪 Flujo de Pruebas
-
-### 🔸 **Administrador Maestro**
-
--   Acceso a panel global.\
--   Edición y eliminación de cualquier curso.\
--   Verificación de permisos sin restricciones.
-
-### 🔸 **Vendedor**
-
--   Creación/publicación de cursos.\
--   Gestión acotada únicamente a su contenido.
-
-### 🔸 **Comprador**
-
--   Inscripción en cursos.\
--   Visualización en "Mis Cursos Inscritos".
-
-------------------------------------------------------------------------
-
-## 🌎 Despliegue y Repositorio
-
-El proyecto está optimizado para despliegue en **Render** utilizando
-**PostgreSQL**.
-
-🔗 Repositorio Oficial:\
-https://github.com/AnthonnyM31/Proyecto_NexusV-V2
+El proyecto ahora cuenta con una interfaz robusta, responsiva y mantenible basada en el estándar de la industria Bootstrap 5.

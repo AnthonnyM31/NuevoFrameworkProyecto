@@ -1,52 +1,75 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="h4 font-weight-bold text-dark mb-0">
             {{ __('Panel Admin | Cursos Globales') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-xl font-bold mb-6">{{ __('Todos los Cursos Creados') }}</h3>
+    <div class="py-5">
+        <div class="container">
+            {{-- AÑADIDO: Pestañas de Navegación del Administrador --}}
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link text-muted" href="{{ route('admin.users.index') }}">{{ __('Usuarios') }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active fw-bold"
+                        href="{{ route('admin.courses.index') }}">{{ __('Cursos Globales') }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted"
+                        href="{{ route('admin.enrollments.index') }}">{{ __('Inscripciones Globales') }}</a>
+                </li>
+            </ul>
+            {{-- FIN PESTAÑAS --}}
 
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($courses as $course)
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h3 class="h5 fw-bold text-dark mb-4">{{ __('Todos los Cursos Creados') }}</h3>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $course->id }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $course->title }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $course->user->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $course->is_published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                            {{ $course->is_published ? 'Publicado' : 'Borrador' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        {{-- Enlace para Editar (usa la ruta del vendedor) --}}
-                                        <a href="{{ route('seller.courses.edit', $course) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</a>
-                                        
-                                        {{-- FORMULARIO DELETE GLOBAL (admin.courses.destroy) --}}
-                                        <form action="{{ route('admin.courses.destroy', $course) }}" method="POST" class="inline" onsubmit="return confirm('ATENCIÓN: Eliminar el curso {{ $course->title }} eliminará TODAS las inscripciones asociadas. ¿Confirmar?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900">Eliminar</button>
-                                        </form>
-                                    </td>
+                                    <th scope="col" class="text-uppercase text-muted small ps-4">ID</th>
+                                    <th scope="col" class="text-uppercase text-muted small">Título</th>
+                                    <th scope="col" class="text-uppercase text-muted small">Vendedor</th>
+                                    <th scope="col" class="text-uppercase text-muted small">Estado</th>
+                                    <th scope="col" class="text-uppercase text-muted small text-end pe-4">Acciones</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="border-top-0">
+                                @foreach ($courses as $course)
+                                    <tr>
+                                        <td class="text-muted ps-4">{{ $course->id }}</td>
+                                        <td class="fw-bold text-dark">{{ $course->title }}</td>
+                                        <td class="text-muted">{{ $course->user->name }}</td>
+                                        <td>
+                                            <span
+                                                class="badge rounded-pill {{ $course->is_published ? 'bg-success' : 'bg-warning text-dark' }}">
+                                                {{ $course->is_published ? 'Publicado' : 'Borrador' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            {{-- Enlace para Editar (usa la ruta del vendedor) --}}
+                                            <a href="{{ route('seller.courses.edit', $course) }}"
+                                                class="btn btn-sm btn-link text-decoration-none fw-bold me-2">Editar</a>
+
+                                            {{-- FORMULARIO DELETE GLOBAL (admin.courses.destroy) --}}
+                                            <form action="{{ route('admin.courses.destroy', $course) }}" method="POST"
+                                                class="d-inline"
+                                                onsubmit="return confirm('ATENCIÓN: Eliminar el curso {{ $course->title }} eliminará TODAS las inscripciones asociadas. ¿Confirmar?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-link text-danger text-decoration-none fw-bold">Eliminar</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="mt-4">{{ $courses->links() }}</div>
                 </div>
             </div>

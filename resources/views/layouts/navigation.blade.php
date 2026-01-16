@@ -1,149 +1,87 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-                    </a>
-                </div>
+<nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm border-bottom">
+    <div class="container">
+        <!-- Logo -->
+        <a class="navbar-brand" href="{{ route('dashboard') }}">
+            <x-application-logo class="d-inline-block align-text-top"
+                style="height: 2.25rem; width: auto; fill: currentColor;" />
+        </a>
 
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+        <!-- Hamburger -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <!-- Left Side Of Navbar -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active fw-bold text-primary' : '' }}"
+                        href="{{ route('dashboard') }}">
                         {{ __('Dashboard') }}
-                    </x-nav-link>
-                    
-                    {{-- Enlace público de Cursos --}}
-                    <x-nav-link :href="route('courses.index')" :active="request()->routeIs('courses.index')">
+                    </a>
+                </li>
+
+                {{-- Enlace público de Cursos --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('courses.index') ? 'active fw-bold text-primary' : '' }}"
+                        href="{{ route('courses.index') }}">
                         {{ __('Explorar Cursos') }}
-                    </x-nav-link>
+                    </a>
+                </li>
 
-                    {{-- ENLACE CONDICIONAL PARA VENDEDORES --}}
-                    @can('is-seller')
-                        <x-nav-link :href="'/seller/courses'" :active="request()->is('seller/courses')">
+                {{-- ENLACE CONDICIONAL PARA VENDEDORES --}}
+                @can('is-seller')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('seller/courses') ? 'active fw-bold text-primary' : '' }}"
+                            href="/seller/courses">
                             {{ __('Gestión de Cursos') }}
-                        </x-nav-link>
-                    @endcan
+                        </a>
+                    </li>
+                @endcan
 
-                    {{-- NUEVO: ENLACE CONDICIONAL PARA ADMINISTRADORES --}}
-                    @can('manage-system')
-                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.index')">
+                {{-- NUEVO: ENLACE CONDICIONAL PARA ADMINISTRADORES --}}
+                @can('manage-system')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.users.index') ? 'active fw-bold text-primary' : '' }}"
+                            href="{{ route('admin.users.index') }}">
                             {{ __('Panel Admin') }}
-                        </x-nav-link>
-                    @endcan
-                </div>
-            </div>
+                        </a>
+                    </li>
+                @endcan
+            </ul>
 
-            {{-- CORRECCIÓN: Controles de Sesión --}}
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <!-- Right Side Of Navbar -->
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 @auth
-                {{-- Opciones de usuario autenticado (Dropdown) --}}
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
+                    <li class="nav-item dropdown">
+                        <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                            {{ Auth::user()->name }}
+                        </a>
 
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                {{ __('Profile') }}
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                @csrf
+                                <a class="dropdown-item" href="{{ route('logout') }}"
+                                    onclick="event.preventDefault(); this.closest('form').submit();">
+                                    {{ __('Log Out') }}
+                                </a>
+                            </form>
+                        </div>
+                    </li>
                 @else
-                {{-- Enlaces para Invitados --}}
-                <a href="{{ route('login') }}" class="text-sm text-gray-700 hover:text-gray-900 underline">
-                    {{ __('Log in') }}
-                </a>
-                <a href="{{ route('register') }}" class="ms-4 text-sm text-gray-700 hover:text-gray-900 underline">
-                    {{ __('Register') }}
-                </a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('login') }}">{{ __('Log in') }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                    </li>
                 @endauth
-            </div>
-
-
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            </ul>
         </div>
-    </div>
-
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-            
-            <x-responsive-nav-link :href="route('courses.index')" :active="request()->routeIs('courses.index')">
-                {{ __('Explorar Cursos') }}
-            </x-responsive-nav-link>
-
-            {{-- ENLACE CONDICIONAL RESPONSIVE PARA VENDEDORES --}}
-            @can('is-seller')
-                <x-responsive-nav-link :href="'/seller/courses'" :active="request()->is('seller/courses')">
-                    {{ __('Gestión de Cursos') }}
-                </x-responsive-nav-link>
-            @endcan
-
-            {{-- NUEVO: ENLACE CONDICIONAL RESPONSIVE PARA ADMINISTRADORES --}}
-            @can('manage-system')
-                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.index')">
-                    {{ __('Panel Admin') }}
-                </x-responsive-nav-link>
-            @endcan
-        </div>
-        
-        {{-- CORRECCIÓN: Responsive Settings Options solo si está autenticado --}}
-        @auth
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
-        @else
-        {{-- Enlaces responsive para Invitados --}}
-        <div class="pt-2 pb-3 space-y-1 border-t border-gray-200">
-            <x-responsive-nav-link :href="route('login')">
-                {{ __('Log in') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('register')">
-                {{ __('Register') }}
-            </x-responsive-nav-link>
-        </div>
-        @endauth
     </div>
 </nav>
