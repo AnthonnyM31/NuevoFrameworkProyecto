@@ -1,76 +1,90 @@
-# Proyecto Migrado: NexusV (Tailwind a Bootstrap 5)
+# NexusV - Refactorización y API (Proyecto Ingeniería Web)
 
-Este proyecto ha sido sometido a una migración completa de su framework de estilos frontend, pasando de **Tailwind CSS** a **Bootstrap 5**, manteniendo intacta la lógica de negocio y el backend en Laravel.
+Este proyecto ha sido actualizado para incorporar mejores prácticas de desarrollo (SOLID), una API RESTful robusta y una integración con React para demostrar el consumo desacoplado de datos.
 
-## 🚀 Resumen del Procedimiento de Migración
+## 🚀 Resumen de Cambios
 
-El objetivo principal fue reemplazar la capa visual sin afectar la funcionalidad existente. A continuación se detallan los pasos realizados:
+### 1. Refactorización y Buenas Prácticas (SOLID)
+El código base original (MVC) ha sido refactorizado para adherirse mejor a los principios SOLID, específicamente el **Principio de Responsabilidad Única (SRP)**.
 
-### 1. Limpieza y Configuración Inicial
-- **Eliminación de Tailwind**: Se desinstalaron los paquetes `tailwindcss`, `postcss` y `autoprefixer`. Se eliminaron los archivos de configuración asociados (`tailwind.config.js`, `postcss.config.js`).
-- **Instalación de Bootstrap**: Se instaló `bootstrap` (versión 5.3) y `@popperjs/core` vía NPM. También se instaló `sass` para el preprocesamiento de estilos.
-- **Configuración de Vite**: Se actualizó `vite.config.js` para procesar archivos SASS (`app.scss`) en lugar de CSS plano, y se configuró la importación de JavaScript de Bootstrap.
+*   **PaymentService**: Se extrajo toda la lógica de negocio relacionada con el procesamiento de pagos, simulación de pasarela y registro de matrículas desde el controlador hacia un servicio dedicado (`App\Services\PaymentService`).
+*   **PaymentController**: Ahora actúa como un controlador "delgado" que solo gestiona la entrada HTTP y delega la lógica al servicio.
+*   **DashboardController**: Se eliminó la lógica de redirección y carga de datos que residía en el archivo de rutas `web.php` (Closure), moviéndola a un controlador limpio y mantenible (`App\Http\Controllers\DashboardController`).
 
-### 2. Migración de Layouts (Estructura Base)
-- **App Layout**: Se reemplazaron las clases de utilidad de Tailwind por los contenedores y Grid system de Bootstrap (`container`, `row`, `col`).
-- **Navigation**: Se reescribió la barra de navegación utilizando el componente `Navbar` de Bootstrap, eliminando la dependencia de Alpine.js para los menús desplegables básicos (aunque Alpine se mantuvo para otras interacciones).
-- **Guest Layout**: Se ajustaron las vistas de autenticación para usar Flexbox utilities de Bootstrap para el centrado y tarjetas (`card`) para los formularios.
+### 2. API RESTful con Autenticación
+Se implementó una API JSON completa para permitir que clientes externos (como aplicaciones móviles o SPAs) consuman los datos del sistema de manera segura.
 
-### 3. Migración de Vistas (Blade Views)
-Se rediseñaron todas las vistas del sistema para adoptar la estética "Premium" de Bootstrap:
+*   **Tecnología**: Laravel Sanctum para autenticación basada en tokens.
+*   **Endpoints Clave**:
+    *   `POST /api/login`: Autenticación de usuarios y generación de Tokens.
+    *   `POST /api/logout`: Revocación de tokens.
+    *   `GET /api/me`: Información del perfil del usuario y sus inscripciones.
+    *   `GET /api/courses`: Listado público de cursos disponibles.
+    *   `GET /api/courses/{id}`: Detalles completos de un curso.
 
-- **Autenticación**: Login, Registro, Recuperación de contraseña, etc.
-- **Módulos Principales**:
-  - **Bienvenida (Welcome)**: Nueva Landing Page con componentes Hero y Features.
-  - **Dashboard**: Panel principal con tarjetas informativas.
-  - **Perfil**: Formularios de edición de perfil, cambio de contraseña y gestión de tarjetas de crédito (diseño de pestañas y modales).
-- **Cursos (Público)**:
-  - **Catálogo**: Grid responsivo de tarjetas de cursos.
-  - **Detalle**: Vista detallada con sidebar "sticky" para precios y acciones.
-  - **Reproductor de Contenido**: Interfaz para consumir videos y documentos con barras de progreso.
-- **Gestión (Vendedor y Admin)**:
-  - **Tablas**: Se implementaron tablas estilizadas (`table-hover`) para la gestión de usuarios, cursos e inscripciones.
-  - **Formularios**: Se estandarizaron todos los `input`, `select` y `button` con las clases `form-control`, `form-select` y `btn`.
+### 3. Integración Frontend (React)
+Para cumplir con el requisito de consumir la API desde un framework JavaScript moderno, se integró **React** dentro del ecosistema Blade existente.
 
-### 4. Componentes Globales
-Se actualizaron los componentes Blade reutilizables (`x-primary-button`, `x-text-input`, `x-modal`, etc.) para que rendericen internamente clases de Bootstrap, asegurando consistencia en todo el sitio.
+*   **Componente React**: `ApiCourseList.jsx` es un componente funcional que gestiona:
+    *   Login asíncrono contra la API.
+    *   Almacenamiento seguro del Token en `localStorage`.
+    *   Listado dinámico de cursos obtenidos desde `/api/courses`.
+*   **Integración**: Configuración de `Vite` con `@vitejs/plugin-react` para compilar JSX junto con los assets de Laravel.
+*   **Demo**: Accesible en la ruta `/api-demo`.
 
-## 🛠️ Cómo ejecutar este proyecto
+---
 
+## 🛠️ Guía de Instalación y Uso
+
+### Prerrequisitos
+*   PHP 8.2+
+*   Composer
+*   Node.js & NPM
+*   Base de datos (SQLite por defecto o MySQL)
+
+### Pasos
 1.  **Clonar el repositorio**:
     ```bash
     git clone https://github.com/AnthonnyM31/NuevoFrameworkProyecto.git
     cd NuevoFrameworkProyecto
     ```
 
-2.  **Instalar dependencias de PHP**:
+2.  **Instalar dependencias Backend**:
     ```bash
     composer install
     ```
 
-3.  **Instalar dependencias de Node (Frontend)**:
+3.  **Configurar entorno**:
     ```bash
-    npm install
-    npm run build
+    cp .env.example .env
+    php artisan key:generate
+    touch database/database.sqlite # Si usas SQLite
+    php artisan migrate --seed
     ```
 
-4.  **Configurar entorno**:
-    - Duplicar `.env.example` a `.env` y configurar base de datos.
-    - Ejecutar migraciones: `php artisan migrate`.
+4.  **Instalar dependencias Frontend (React + Vite)**:
+    ```bash
+    npm install
+    npm run dev
+    ```
 
-5.  **Iniciar servidor**:
+5.  **Ejecutar servidor**:
     ```bash
     php artisan serve
     ```
 
-El proyecto ahora cuenta con una interfaz robusta, responsiva y mantenible basada en el estándar de la industria Bootstrap 5.
+### 🧪 Cómo probar las nuevas funcionalidades
 
-## 👥 Usuarios por Defecto (Seeders)
+1.  **Probar la API y React**:
+    *   Ve a `http://localhost:8000/api-demo` en tu navegador.
+    *   Verás una interfaz construida 100% con React.
+    *   Ingresa un usuario válido (ej: `admin@example.com` / `password`).
+    *   Al iniciar sesión, React obtendrá un Token de la API y cargará la lista de cursos sin recargar la página.
 
-Para facilitar las pruebas, se han creado los siguientes usuarios por defecto en la base de datos:
+2.  **Verificar Refactorización (Pagos)**:
+    *   Navega por el flujo normal de compra de un curso.
+    *   El proceso es transparente para el usuario final, pero internamente ahora utiliza `PaymentService`, garantizando un código más limpio y testeable.
 
-| Rol | Nombre | Email | Contraseña |
-| :--- | :--- | :--- | :--- |
-| 👑 **Admin Maestro** | Admin Maestro | `admin@nexusv.com` | `password123` |
-| 💼 **Vendedor** | Vendedor Demo | `seller@test.com` | `password123` |
-| 🛒 **Comprador** | Comprador Demo | `buyer@test.com` | `password123` |
+---
+
+**Desarrollado para la asignatura de Ingeniería Web - Séptimo Semestre.**

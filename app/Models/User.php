@@ -11,9 +11,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use Laravel\Sanctum\HasApiTokens; // <-- Importación Sanctum
+
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable; // <-- Trait Agregado
 
     protected $fillable = [
         'name',
@@ -46,7 +48,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(Enrollment::class);
     }
-    
+
     /**
      * Get the payment methods for the user.
      */
@@ -54,7 +56,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(PaymentMethod::class);
     }
-    
+
     /**
      * Get the payments made by the user (needed for history).
      */
@@ -84,7 +86,7 @@ class User extends Authenticatable
         // El rol 'admin-secondary' también cuenta como administrador.
         return in_array($this->role, ['admin-master', 'admin-secondary']);
     }
-    
+
     /**
      * Verifica si el usuario tiene el rol de Vendedor.
      */

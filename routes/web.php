@@ -39,6 +39,9 @@ Route::get('/', function () {
 Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course}', [PublicCourseController::class, 'show'])->name('courses.show');
 
+// Ruta Demo React API
+Route::view('/api-demo', 'api-demo')->name('api.demo');
+
 
 // --------------------------------------------------------------------------------------
 // 2. GRUPO DE RUTAS PROTEGIDAS POR AUTENTICACIÓN
@@ -56,7 +59,7 @@ Route::middleware('auth')->group(function () {
     // 2. Procesar el pago simulado (POST)
     Route::post('/payment/process/{course}', [PaymentController::class, 'processPayment'])
         ->name('payment.process');
-    
+
     // 3. Redirección de éxito
     Route::get('/payment/success/{course}', [PaymentController::class, 'success'])
         ->name('payment.success');
@@ -83,13 +86,13 @@ Route::middleware('auth')->group(function () {
     // RUTA DE CONTENIDO DEL CURSO: USAR EL ALIAS DE LA CLASE IMPORTADA    
     Route::get('/courses/{course}/content', [PublicCourseController::class, 'content'])
         ->name('courses.content');
-        
+
     // Rutas de Perfil, Inscripción... (CÓDIGO EXISTENTE)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/profile/payments', [ProfileController::class, 'payments'])->name('profile.payments'); // <-- NUEVA RUTA: Historial de Pagos
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // Rutas de Inscripción (Enrollment) - Queda inactiva, la compra la reemplaza.
     // **NOTA:** Deberías considerar eliminar esta ruta si el pago es obligatorio.
     // Route::post('/enroll/{course}', [EnrollmentController::class, 'store'])
@@ -98,7 +101,7 @@ Route::middleware('auth')->group(function () {
     // =======================================================
     // NUEVAS RUTAS DE PROGRESO (Fase 2)
     // =======================================================
-    
+
     // ENDPOINT PARA REGISTRAR PROGRESO (Comprador marca lección como vista)
     Route::post('progress/complete/{module}', [CourseProgressController::class, 'store'])
         ->name('progress.store');
@@ -107,14 +110,14 @@ Route::middleware('auth')->group(function () {
     // =======================================================
     // 5. NUEVAS RUTAS DE ADMINISTRACIÓN (Control Total)
     // =======================================================
-    
+
     Route::middleware('can:manage-system')->prefix('admin')->group(function () {
-        
+
         // Gestión de Usuarios (CRUD)
         Route::resource('users', UserController::class)
             ->names('admin.users')
             ->only(['index', 'create', 'edit', 'update', 'destroy']);
-        
+
         // Ruta para crear un nuevo Administrador Secundario (POST)
         Route::post('users/create-admin', [UserController::class, 'storeAdmin'])
             ->name('admin.users.store-admin');
@@ -133,51 +136,32 @@ Route::middleware('auth')->group(function () {
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
         ->middleware('can:is-seller');
     // *******************************************************
-    
+
     // =======================================================
     // RUTAS DE REPORTES DEL VENDEDOR
     // =======================================================
     Route::get('seller/reports', [ReportsController::class, 'index'])
         ->name('seller.reports.index')
         ->middleware('can:is-seller');
-    
+
     // =======================================================
     // RUTAS ANIDADAS DE MÓDULOS (Fase 2)
     // =======================================================
-    
+
     // Rutas de Gestión de Módulos (VENDEDOR)
     Route::resource('seller/courses.modules', ModuleController::class)
         ->names('seller.modules')
         ->except(['index', 'show'])
         ->middleware('can:is-seller');
-    
-    // Ruta Dashboard (con Lógica de Redirección por Rol)
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
 
-        // 1. Redirección del Administrador
-        if ($user->isAdmin()) {
-            return redirect()->route('admin.users.index'); // <-- Redirigir al panel de control de usuarios
-        }
-
-        // 2. Redirección del Vendedor
-        if ($user->isSeller()) {
-            return redirect()->route('seller.courses.index'); // Redirigir al listado de cursos del vendedor
-        }
-
-        // 3. Lógica del Comprador (Dashboard)
-        // Nota: Mantenemos la lógica de la matrícula aquí, aunque el pago la crea
-        $enrollments = Enrollment::with('course.user')
-            ->where('user_id', $user->id)
-            ->latest()
-            ->get();
-
-        return view('dashboard', compact('enrollments'));
-    })->middleware(['verified'])->name('dashboard');
+    // Ruta Dashboard (Gestión centralizada en Controlador)
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+        ->middleware(['verified'])
+        ->name('dashboard');
 
 });
 // --------------------------------------------------------------------------------------
 
 
 // 3. RUTAS DE AUTENTICACIÓN DE BREEZE (Login, Register, etc.)
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
